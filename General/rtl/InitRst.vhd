@@ -19,7 +19,7 @@ entity InitRst is
    generic (
       SYNC_STAGES_G  : integer := 2;
       RST_POL_G      : sl := '1';
-      RST_CNT_G      : integer := 125000000;
+      RST_CNT_G      : integer := 12500000;
       GATE_DELAY_G   : time := 1 ns
    );
    port ( 

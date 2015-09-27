@@ -20,7 +20,7 @@ entity CommandInterpreter is
    generic (
       REG_ADDR_BITS_G : integer := 16;
       REG_DATA_BITS_G : integer := 16;
-      TIMEOUT_G       : integer := 125000;
+      TIMEOUT_G       : integer := 1250000;
       GATE_DELAY_G    : time := 1 ns
    );
    port ( 
