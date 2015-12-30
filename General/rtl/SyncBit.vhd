@@ -21,6 +21,7 @@ use unisim.vcomponents.all;
 entity SyncBit is 
    generic (
       SYNC_STAGES_G  : integer := 2;
+      CLK_POL_G      : sl := '1';
       RST_POL_G      : sl := '1';
       INIT_STATE_G   : sl := '0';
       GATE_DELAY_G   : time := 1 ns
@@ -40,53 +41,104 @@ end SyncBit;
 architecture structural of SyncBit is
 
    -- Internal Signals
-   signal data_sync1 : std_logic;
+   signal data_sync1  : std_logic;
+   signal syncBitPipe : std_logic_vector(SYNC_STAGES_G-2 downto 0);
 
    -- These attributes will stop Vivado translating the desired flip-flops into an
    -- SRL based shift register.
-   attribute ASYNC_REG             : string;
-   attribute ASYNC_REG of cdc_reg1 : label is "TRUE";
-   attribute ASYNC_REG of cdc_reg2 : label is "TRUE";
+   attribute ASYNC_REG                                  : string;
+--   attribute ASYNC_REG of "G_RisingEdgeClock.cdc_reg1"  : label is "TRUE";
+--   attribute ASYNC_REG of "G_RisingEdgeClock.cdc_reg2"  : label is "TRUE";
+--   attribute ASYNC_REG of "G_FallingEdgeClock.cdc_reg1" : label is "TRUE";
+--   attribute ASYNC_REG of "G_FallingEdgeClock.cdc_reg2" : label is "TRUE";
  
    -- These attributes will stop timing errors being reported on the target flip-flop during back annotated SDF simulation.
    -- Unfortunately this does not seem to fix timing errors in implementation.
    -- To do this, modify the UCF to add something like:
    -- 
-   attribute MSGON             : string;
-   attribute MSGON of cdc_reg1 : label is "FALSE";
-   attribute MSGON of cdc_reg2 : label is "FALSE";
+   attribute MSGON                                  : string;
+--   attribute MSGON of "G_RisingEdgeClock.cdc_reg1"  : label is "FALSE";
+--   attribute MSGON of "G_RisingEdgeClock.cdc_reg2"  : label is "FALSE";
+--   attribute MSGON of "G_FallingEdgeClock.cdc_reg1" : label is "FALSE";
+--   attribute MSGON of "G_FallingEdgeClock.cdc_reg2" : label is "FALSE";
  
    -- These attributes will stop XST translating the desired flip-flops into an
    -- SRL based shift register.
-   attribute shreg_extract             : string;
-   attribute shreg_extract of cdc_reg1 : label is "no";
-   attribute shreg_extract of cdc_reg2 : label is "no";
-  
+   attribute shreg_extract                                  : string;
+--   attribute shreg_extract of "G_RisingEdgeClock.cdc_reg1"  : label is "no";
+--   attribute shreg_extract of "G_RisingEdgeClock.cdc_reg2"  : label is "no";
+--   attribute shreg_extract of "G_FallingEdgeClock.cdc_reg1" : label is "no";
+--   attribute shreg_extract of "G_FallingEdgeClock.cdc_reg2" : label is "no";
+
 begin
 
-   cdc_reg1 : FDRE
-   generic map (
-     INIT => to_bit(INIT_STATE_G)
-   )
-   port map (
-     C    => clk,
-     CE   => '1',
-     R    => rst,
-     D    => asyncBit,
-     Q    => data_sync1
-   );
+   G_RisingEdgeClock : if CLK_POL_G = '1' generate
+      cdc_reg1 : FDRE
+      generic map (
+        INIT => to_bit(INIT_STATE_G)
+      )
+      port map (
+        C    => clk,
+        CE   => '1',
+        R    => rst,
+        D    => asyncBit,
+        Q    => data_sync1
+      );
 
-   cdc_reg2 : FDRE
-   generic map (
-     INIT => to_bit(INIT_STATE_G)
-   )
-   port map (
-     C    => clk,
-     CE   => '1',
-     R    => rst,
-     D    => data_sync1,
-     Q    => syncBit
-   );
+      cdc_reg2 : FDRE
+      generic map (
+        INIT => to_bit(INIT_STATE_G)
+      )
+      port map (
+        C    => clk,
+        CE   => '1',
+        R    => rst,
+        D    => data_sync1,
+        Q    => syncBitPipe(0)
+      );
+   end generate;
+   
+   G_FallingEdgeClock : if CLK_POL_G = '0' generate
+      cdc_reg1 : FDCE_1
+      generic map (
+        INIT => to_bit(INIT_STATE_G)
+      )
+      port map (
+        C    => clk,
+        CE   => '1',
+        CLR  => rst,
+        D    => asyncBit,
+        Q    => data_sync1
+      );
+
+      cdc_reg2 : FDCE_1
+      generic map (
+        INIT => to_bit(INIT_STATE_G)
+      )
+      port map (
+        C    => clk,
+        CE   => '1',
+        CLR  => rst,
+        D    => data_sync1,
+        Q    => syncBitPipe(0)
+      );   
+   end generate;
+
+   G_SyncPipe : if SYNC_STAGES_G > 2 generate
+      process(clk) begin
+         if rising_edge(clk) then
+            if rst = '1' then
+               syncBitPipe(syncBitPipe'left downto 1) <= (others => INIT_STATE_G);
+            else
+               for i in syncBitPipe'left downto 1 loop
+                  syncBitPipe(i) <= syncBitPipe(i-1);
+               end loop;
+            end if;
+         end if;
+      end process;
+   end generate;
+
+   syncBit <= syncBitPipe(syncBitPipe'left);
 
 end structural;
 
