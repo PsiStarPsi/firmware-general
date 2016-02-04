@@ -10,6 +10,8 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
 
 package UtilityPkg is
    
@@ -29,6 +31,10 @@ package UtilityPkg is
    function getByte (byteNum : integer; input : slv) return slv;
    -- Conditional selection of constants
    function sel (conditional : boolean; if_true : natural; if_false : natural) return natural;
+   -- Count number of 1's in a std_logic_vector
+   function countOnes (input : slv) return integer;
+   -- Sum up number of bytes
+   function sumBytes (input : Word8Array) return integer;
    
 end UtilityPkg;
 
@@ -51,6 +57,26 @@ package body UtilityPkg is
       else 
          return(if_false);
       end if;
+   end function;
+   
+   function countOnes (input : slv) return integer is
+      variable retVal : integer := 0;
+   begin
+     for i in input'range loop
+       if 
+         input(i) = '1' then retVal := retVal + 1; 
+       end if;
+     end loop;
+     return retVal;
+   end function;
+   
+   function sumBytes (input : Word8Array) return integer is
+      variable retVal : integer := 0;
+   begin
+      for i in input'range loop
+         retVal := retVal + conv_integer(input(i));
+      end loop;
+      return retVal;
    end function;
    
 end package body UtilityPkg;
