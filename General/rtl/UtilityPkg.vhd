@@ -20,6 +20,8 @@ package UtilityPkg is
    subtype slv is std_logic_vector;
    -- Useful array types
    type Word8Array  is array (natural range <>) of slv( 7 downto 0);
+   type Word9Array  is array (natural range <>) of slv( 8 downto 0);
+   type Word10Array is array (natural range <>) of slv( 9 downto 0);
    type Word13Array is array (natural range <>) of slv(12 downto 0);
    type Word16Array is array (natural range <>) of slv(15 downto 0);
    type Word32Array is array (natural range <>) of slv(31 downto 0);
@@ -35,6 +37,8 @@ package UtilityPkg is
    function countOnes (input : slv) return integer;
    -- Sum up number of bytes
    function sumBytes (input : Word8Array) return integer;
+   -- Sum up an array of 2-byte inputs
+   function sum2Bytes (input : Word16Array) return integer;
    
 end UtilityPkg;
 
@@ -79,4 +83,13 @@ package body UtilityPkg is
       return retVal;
    end function;
    
+   function sum2Bytes (input : Word16Array) return integer is
+      variable retVal : integer := 0;
+   begin
+      for i in input'range loop
+         retVal := retVal + conv_integer(input(i));
+      end loop;
+      return retVal;
+   end function;
+
 end package body UtilityPkg;

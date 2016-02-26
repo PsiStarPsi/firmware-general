@@ -87,13 +87,11 @@ architecture rtl of ByteLink is
 
    -- ISE attributes to keep signals for debugging
    -- attribute keep : string;
-   -- attribute keep of r : signal is "true";
-   -- attribute keep of crcOut : signal is "true";      
+   -- attribute keep of r : signal is "true";    
    
    -- Vivado attributes to keep signals for debugging
    -- attribute dont_touch : string;
    -- attribute dont_touch of r : signal is "true";
-   -- attribute dont_touch of crcOut : signal is "true";   
    
    -- Comma character definitions
    constant K_COM_ALIGN_C : slv(7 downto 0) := x"3C"; --(K28.1)
