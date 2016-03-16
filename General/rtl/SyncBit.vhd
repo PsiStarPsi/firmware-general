@@ -29,7 +29,7 @@ entity SyncBit is
    port ( 
       -- Clock and reset
       clk         : in  sl;
-      rst         : in  sl;
+      rst         : in  sl := '0';
       -- Incoming bit, asynchronous
       asyncBit    : in  sl;
       -- Outgoing bit, synced to clk
